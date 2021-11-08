@@ -42,12 +42,12 @@ public class Variable {
 
     @Override
     public String toString() {
-        return "Variable: " + name + "\n" +printParents() +
-                "\nOutcomes = " + Arrays.toString(outComes) +"\n"+cpt;
+        return "Variable: " + name + "\n" + printParents() +
+                "\nOutcomes = " + Arrays.toString(outComes) +"\n"+cpt +"\n";
     }
 
     private String printParents(){
-        if (parents == null) return  "";
+        if (parents == null) return "NO PARENTS";
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append("Parents: ");
         for (Variable v: parents) {

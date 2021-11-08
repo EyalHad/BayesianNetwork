@@ -2,6 +2,7 @@ import org.w3c.dom.*;
 
 import javax.xml.parsers.*;
 import java.io.*;
+import java.util.Arrays;
 
 public class XMLParser {
 
@@ -77,45 +78,84 @@ public class XMLParser {
 
                         } else if (inner.getTagName().equals("TABLE")) {
 
-
                             String table = inner.getTextContent();
                             String[] probabilities = table.split(" ");
-
                             String[] parents = givens.toString().split(" ");
-                            Variable[] vars = new Variable[parents.length];
-
-
-                            for (int k = 0; k < parents.length; k++) {
-                                vars[k] = net.getVariable(parents[parents.length - 1 - k]);
-                            }
-
 
                             int outcomes = net.getVariable(name).getOutComes().length;
                             Variable v = net.getVariable(name);
-
-
-                            if (vars[0] != null) { // No Parents
-
-                                for (int k = 0; k < probabilities.length; k = k + outcomes) {
-
-                                    for (int l = k; l < k + outcomes; l++) {
-                                        String out = net.getVariable(name).getOutComes()[l % outcomes];
-                                        String[] result = new String[vars.length + 1];
-                                        result[0] = name + "=" + v.getOutComes()[l % outcomes];
-
-                                        v.getCpt().addRow(result, Double.parseDouble(probabilities[l]));
-                                    }
-                                }
-                            } else {
-
+                            if (parents[0].equals("")) {
                                 for (int l = 0; l < outcomes; l++) {
                                     String[] result = new String[1];
                                     result[0] = name + "=" + v.getOutComes()[l];
                                     v.getCpt().addRow(result, Double.parseDouble(probabilities[l]));
                                 }
+
+                            } else {
+                                String[][] cpt = new String[probabilities.length + 1][parents.length + 2];
+                                cpt[0][0] = name;
+                                for (int k = 1; k <= parents.length; k++) {
+                                    cpt[0][k] = parents[parents.length - k];
+                                }
+                                cpt[0][parents.length + 1] = "P";
+
+
+                                int w = 1;
+                                while (w < probabilities.length)
+                                    for (String outcome : v.getOutComes()) {
+                                        cpt[w][0] = outcome;
+                                        w++;
+                                    }
+
+
+                                int u = 1;
+                                int tempOutcome = net.getVariable(name).getOutComes().length;
+                                for (int x = parents.length -1; x >= 0; x--) {
+                                    Variable variable = net.getVariable(parents[x]);
+                                    int loop = tempOutcome;
+                                    w = 1;
+                                    while (w < probabilities.length)
+                                        for (String outcome : variable.getOutComes()) {
+                                            int noName = 0;
+                                            while (noName < loop && w <= probabilities.length) {
+                                                cpt[w][u] = outcome;
+                                                w++;
+                                                noName++;
+                                            }
+                                        }
+                                    tempOutcome *= variable.getOutComes().length;
+                                    u++;
+                                }
+                                u = parents.length+1;
+                                w = 1;
+                                while (w < probabilities.length)
+                                    for (String probability : probabilities) {
+                                        cpt[w][u] = probability;
+                                        w++;
+                                    }
+                                for (int line = 1; line < cpt.length; line++){
+                                    String FOR = cpt[0][0] + "=" + cpt[line][0] + "|";
+                                    StringBuilder GIVENS = new StringBuilder();
+                                    for (int k = 1; k < cpt[0].length-1; k++) {
+                                        GIVENS.append(cpt[0][k]).append("=").append(cpt[line][k]);
+                                        if (k != cpt[0].length-2){
+                                            GIVENS.append(",");
+                                        }
+                                    }
+//                                    System.out.println(cpt[line][cpt[0].length-1]);
+                                    double stringToDouble = Double.parseDouble(cpt[line][cpt[0].length-1]);
+                                    String[] strings = {FOR+GIVENS.toString()};
+//                                    System.out.println(FOR);
+//                                    System.out.println(GIVENS);
+                                    v.getCpt().addRow(strings,stringToDouble);
+                                }
+
+
+
                             }
+
                         }
-                    } catch (Exception ignored) { /* EMPTY */ }
+                    } catch (ClassCastException ignored) { /* EMPTY */ }
                 }
             }
 
