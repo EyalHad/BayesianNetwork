@@ -1,10 +1,10 @@
 
 public class Ex1 {
-    private static final String FILENAME = "big_net.xml";
+    private static final String FILENAME = "input.txt";
 
     public static void main(String[] args) {
 
-       new XMLParser(FILENAME);
+       new Input(FILENAME);
     }
 
 }
