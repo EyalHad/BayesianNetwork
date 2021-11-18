@@ -5,6 +5,7 @@ public class Ex1 {
     public static void main(String[] args) {
 
        new Input(FILENAME);
+       Output.writeToFile();
     }
 
 }
