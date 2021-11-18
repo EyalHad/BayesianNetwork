@@ -7,6 +7,7 @@ import java.util.HashSet;
 
 public class XMLParser {
 
+    public Network net ;
 
     public XMLParser(String FILENAME) {
 
@@ -20,7 +21,7 @@ public class XMLParser {
 
             doc.getDocumentElement().normalize();
 
-            Network net = new Network();
+            net = new Network();
             NodeList VARIABLE = doc.getElementsByTagName("VARIABLE");
 
             for (int i = 0; i < VARIABLE.getLength(); i++) {
@@ -174,7 +175,8 @@ public class XMLParser {
                     } catch (ClassCastException ignored) { /* EMPTY */ }
                 }
             }
-            System.out.println(net.toString());
+//            System.out.println(net.toString());
+            BayesBall.setNet(net);
         } catch (Exception e) {
             e.printStackTrace();
         }
