@@ -21,18 +21,21 @@ public class BayesBall {
         HashSet<Variable> evs = new HashSet<>();
         if (evidences != null)
             for (String e : evidences) {
+                // The evidence outcome is irrelevant for the algorithm, just need to know its there
                 String[] leftSide = e.split("=");
                 evs.add(net.getVariable(leftSide[0]));
             }
+        // When starting the algorithm - the node that we're coming from is not exist therefore null
         independent = BouncingBall(null, src, dest, evs, Direction.UP);
     }
 
-    public boolean BouncingBall(Variable from, Variable src, Variable dest, HashSet<Variable> evidence, Direction where) {
-        if (src == dest) {return false;}
+    public boolean BouncingBall(Variable from, Variable src, Variable dest, HashSet<Variable> evidence, Direction direction) {
+        // This means we reach our Goal there for the Variables are not Independent
+        if (src.equals(dest)) {return false;}
 
-
+        // This means we have reached an evidence variable
         else if (evidence.contains(src)) {
-            if (where != Direction.UP) {
+            if (direction != Direction.UP) {
                 for (Variable parent : src.getParents()) {
                     if (!BouncingBall(src, parent, dest, evidence, Direction.UP)) {return false;}
                 }
@@ -41,7 +44,7 @@ public class BayesBall {
 
 
         } else {
-            if (where == Direction.DOWN) {
+            if (direction == Direction.DOWN) {
                 for (Variable child : src.getChildren()) {
                     if (child != from) {
                         if (!BouncingBall(src, child, dest, evidence, Direction.DOWN)) {return false;}
