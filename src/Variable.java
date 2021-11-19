@@ -1,14 +1,12 @@
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 public class Variable {
 
 
     private final String name;
     private final String[] outComes;
-    private Set<Variable> parents;
+    private Set<Variable> parents = new HashSet<>();
+    private Set<Variable> children = new HashSet<>();
 
     private CPT cpt = new CPT(); // Conditional Probability Table
 
@@ -22,9 +20,11 @@ public class Variable {
         return cpt;
     }
 
-    void addParent(Variable variable){
-        if (parents == null){ parents = new HashSet<>(); }
+    public void addParent(Variable variable){
         parents.add(variable);
+    }
+    public void addChild(Variable variable){
+        children.add(variable);
     }
 
     public String getName() {
@@ -38,11 +38,12 @@ public class Variable {
     public Set<Variable> getParents() {
         return parents;
     }
+    public Set<Variable> getChildren() { return children;}
 
 
     @Override
     public String toString() {
-        return "Variable: " + name + "\n" + printParents() +
+        return "Variable: " + name + "\n" + printParents() + "\n" + printChildren() +
                 "\nOutcomes = " + Arrays.toString(outComes) +"\n"+cpt +"\n";
     }
 
@@ -55,4 +56,26 @@ public class Variable {
         }
         return stringBuilder.toString();
     }
+
+    private String printChildren(){
+        if (children == null) return "NO CHILDREN";
+        StringBuilder stringBuilder = new StringBuilder();
+        stringBuilder.append("Children: ");
+        for (Variable v: children) {
+            stringBuilder.append(v.getName()).append(", ");
+        }
+        return stringBuilder.toString();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Variable variable = (Variable) o;
+        return Objects.equals(name, variable.name) &&
+                Objects.equals(parents, variable.parents) &&
+                Objects.equals(children, variable.children);
+    }
+
+
 }

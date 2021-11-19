@@ -77,6 +77,7 @@ public class XMLParser {
                             Variable variable = net.getVariable(given);
                             net.addEdge(varName, variable);
                             net.getVariable(varName).addParent(variable);
+                            net.getVariable(variable.getName()).addChild(net.getVariable(varName));
 
                         } else if (inner.getTagName().equals("TABLE")) {
 
@@ -175,7 +176,7 @@ public class XMLParser {
                     } catch (ClassCastException ignored) { /* EMPTY */ }
                 }
             }
-//            System.out.println(net.toString());
+            System.out.println(net.toString());
             BayesBall.setNet(net);
         } catch (Exception e) {
             e.printStackTrace();
