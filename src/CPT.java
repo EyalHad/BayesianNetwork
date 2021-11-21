@@ -6,14 +6,14 @@ import java.util.stream.Collectors;
 
 public class CPT {
 
-    private final HashMap<HashSet<String>, Double> _TABLE;
+    private final HashMap<String, Double> _TABLE;
     private String[][] matrix;
 
     public CPT() {
         _TABLE = new HashMap<>();
     }
 
-    public void addRow(HashSet<String> givens, double probability) {
+    public void addRow(String givens, double probability) {
         _TABLE.put(givens, probability);
     }
 
@@ -31,5 +31,8 @@ public class CPT {
                 .map(s -> s.toString() + "->" + _TABLE.get(s) + "\n")
                 .collect(Collectors.joining());
     }
+
+
+
 
 }
