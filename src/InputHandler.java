@@ -83,6 +83,7 @@ public class InputHandler {
             String[] leftSide = query[0].split("\\|");
 
             String src = leftSide[0].charAt(0) + "";
+
             _Evidence = leftSide[1].split(",");
 
             Queue<String> toFactors = new LinkedList<>();
@@ -90,29 +91,23 @@ public class InputHandler {
             for (String hidden : hiddenALL) {
                 BayesBall bounce = new BayesBall(src, hidden, _Evidence);
                 if (!bounce.isIndependent()) {
-//                    if(VariableElimination.BFS(src, hidden, _Evidence)) {
-                    System.out.println(rawData.get(i) + " checking: " + hidden + ", " + VariableElimination.BFS(src, hidden, _Evidence));
-                    toFactors.add(hidden);
-//                    }
+                    if (VariableElimination.BFS(src, hidden, _Evidence)) {
+//                    System.out.println(rawData.get(i) + " checking: " + hidden + ", " + VariableElimination.BFS(src, hidden, _Evidence));
+                        toFactors.add(hidden);
+                    }
                 }
+            }
+            Queue<Factor> factors = new LinkedList<>();
+            while (!toFactors.isEmpty()) {
+                Variable variable = XMLParser.net.getVariable(toFactors.poll());
+                Factor factor = new Factor(variable, _Evidence, leftSide[0]);
+                System.out.println(factor);
+                factors.add(factor);
             }
 
 
         }
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
     /**
@@ -121,7 +116,7 @@ public class InputHandler {
 
     public static class XMLParser {
 
-        public Network net;
+        public static Network net;
 
         public XMLParser(String FILENAME) {
 
@@ -205,9 +200,9 @@ public class InputHandler {
                                 if (parents[0].equals("")) {
 
                                     String[][] tableNoParents = new String[outcomes + 1][2];
-                                    StringBuilder set = new StringBuilder();
-                                    for (int l = 0; l < outcomes; l++) {
 
+                                    for (int l = 0; l < outcomes; l++) {
+                                        StringBuilder set = new StringBuilder();
                                         tableNoParents[l + 1][0] = netVariable.getOutComes()[l];
                                         tableNoParents[l + 1][1] = probabilitiesAsStrings[l];
                                         set.append(varName + "=" + tableNoParents[l + 1][0]);
@@ -273,10 +268,10 @@ public class InputHandler {
                                     for (int line = 1; line < tableROWS; line++) {
                                         StringBuilder set = new StringBuilder();
 
-                                        String FOR = varName + "=" + cpt[line][0];
+                                        String FOR = varName + "=" + cpt[line][0] + ", ";
                                         set.append(FOR);
                                         for (int k = 1; k < tableCOLUMNS - 1; k++) {
-                                            String GIVENS = cpt[0][k] + "=" + cpt[line][k];
+                                            String GIVENS = cpt[0][k] + "=" + cpt[line][k] + ", ";
                                             set.append(GIVENS);
                                         }
 
@@ -293,6 +288,7 @@ public class InputHandler {
 //            System.out.println(net.toString());
                 BayesBall.setNet(net);
                 VariableElimination.setNet(net);
+                Factor.setNet(net);
             } catch (Exception e) {
                 e.printStackTrace();
             }
