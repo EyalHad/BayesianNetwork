@@ -5,13 +5,13 @@ public class Variable {
 
     private final String name;
     private final String[] outComes;
-    private Set<Variable> parents = new HashSet<>();
-    private Set<Variable> children = new HashSet<>();
+    private final Set<Variable> parents = new HashSet<>();
+    private final Set<Variable> children = new HashSet<>();
 
     private CPT cpt = new CPT(); // Conditional Probability Table
 
 
-    public Variable(String n, String[] o){
+    public Variable(String n, String[] o) {
         outComes = o;
         name = n;
     }
@@ -20,10 +20,11 @@ public class Variable {
         return cpt;
     }
 
-    public void addParent(Variable variable){
+    public void addParent(Variable variable) {
         parents.add(variable);
     }
-    public void addChild(Variable variable){
+
+    public void addChild(Variable variable) {
         children.add(variable);
     }
 
@@ -38,30 +39,33 @@ public class Variable {
     public Set<Variable> getParents() {
         return parents;
     }
-    public Set<Variable> getChildren() { return children;}
+
+    public Set<Variable> getChildren() {
+        return children;
+    }
 
 
     @Override
     public String toString() {
         return "Variable: " + name + "\n" + printParents() + "\n" + printChildren() +
-                "\nOutcomes = " + Arrays.toString(outComes) +"\n"+cpt +"\n";
+                "\nOutcomes = " + Arrays.toString(outComes) + "\n" + cpt + "\n";
     }
 
-    private String printParents(){
-        if (parents == null) return "NO PARENTS";
+    private String printParents() {
+        if (parents.isEmpty()) return "NO PARENTS";
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append("Parents: ");
-        for (Variable v: parents) {
+        for (Variable v : parents) {
             stringBuilder.append(v.getName()).append(", ");
         }
         return stringBuilder.toString();
     }
 
-    private String printChildren(){
-        if (children == null) return "NO CHILDREN";
+    private String printChildren() {
+        if (children.isEmpty()) return "NO CHILDREN";
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append("Children: ");
-        for (Variable v: children) {
+        for (Variable v : children) {
             stringBuilder.append(v.getName()).append(", ");
         }
         return stringBuilder.toString();

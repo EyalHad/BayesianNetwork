@@ -8,21 +8,22 @@ public class Network {
     private HashMap<String, HashSet<Variable>> graph;
     private HashMap<String, Variable> nodes;
 
-    public Network(){
+    public Network() {
         graph = new HashMap<>();
         nodes = new HashMap<>();
     }
 
-    public void addVariable(Variable variable){
+    public void addVariable(Variable variable) {
         HashSet<Variable> set = new HashSet<>();
         graph.put(variable.getName(), set);
-        nodes.put(variable.getName(),variable);
+        nodes.put(variable.getName(), variable);
     }
-    public void addEdge(String name, Variable variable){
+
+    public void addEdge(String name, Variable variable) {
         graph.get(name).add(variable);
     }
 
-    public Variable getVariable(String name){
+    public Variable getVariable(String name) {
         return nodes.get(name);
     }
 
@@ -30,17 +31,19 @@ public class Network {
     public String toString() {
         StringBuilder s = new StringBuilder();
         s.append("~~~ Bayes Network: ~~~\n\n");
-        for (Variable name :nodes.values()) {
+        for (Variable name : nodes.values()) {
             s.append(name.toString());
         }
         s.append("\n~~~ Graph: ~~~\n\n");
-        for (String name: graph.keySet()) {
+        for (String name : graph.keySet()) {
             HashSet<Variable> variables = graph.get(name);
-            for (Variable var: variables) {
+            for (Variable var : variables) {
                 s.append(var.getName())
                         .append("->").append(name).append(", ");
             }
-            if (!variables.isEmpty()){ s.append("\n");}
+            if (!variables.isEmpty()) {
+                s.append("\n");
+            }
 
         }
         return s.toString();

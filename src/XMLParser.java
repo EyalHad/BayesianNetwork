@@ -7,7 +7,7 @@ import java.util.HashSet;
 
 public class XMLParser {
 
-    public Network net ;
+    public Network net;
 
     public XMLParser(String FILENAME) {
 
@@ -176,8 +176,9 @@ public class XMLParser {
                     } catch (ClassCastException ignored) { /* EMPTY */ }
                 }
             }
-            System.out.println(net.toString());
+//            System.out.println(net.toString());
             BayesBall.setNet(net);
+            VariableElimination.setNet(net);
         } catch (Exception e) {
             e.printStackTrace();
         }

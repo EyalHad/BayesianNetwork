@@ -6,18 +6,18 @@ import java.util.stream.Collectors;
 
 public class CPT {
 
-    private final HashMap<HashSet<String>,Double> _TABLE;
+    private final HashMap<HashSet<String>, Double> _TABLE;
     private String[][] matrix;
 
-    public CPT(){
+    public CPT() {
         _TABLE = new HashMap<>();
     }
 
-    public void addRow(HashSet<String> givens,double probability){
-        _TABLE.put(givens,probability);
+    public void addRow(HashSet<String> givens, double probability) {
+        _TABLE.put(givens, probability);
     }
 
-    public void addMatrix(String[][] matrix){
+    public void addMatrix(String[][] matrix) {
         this.matrix = matrix;
     }
 

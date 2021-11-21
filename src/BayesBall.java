@@ -1,4 +1,5 @@
 import java.util.HashSet;
+import java.util.Iterator;
 
 public class BayesBall {
 
@@ -31,35 +32,60 @@ public class BayesBall {
 
     public boolean BouncingBall(Variable from, Variable src, Variable dest, HashSet<Variable> evidence, Direction direction) {
         // This means we reach our Goal there for the Variables are not Independent
-        if (src.equals(dest)) {return false;}
+        if (src.equals(dest)) {
+            return false;
+        }
 
         // This means we have reached an evidence variable
         else if (evidence.contains(src)) {
+
             if (direction != Direction.UP) {
-                for (Variable parent : src.getParents()) {
-                    if (!BouncingBall(src, parent, dest, evidence, Direction.UP)) {return false;}
+
+                Iterator<Variable> variableIterator = src.getParents().iterator();
+                while (variableIterator.hasNext()) {
+                    if (!BouncingBall(src, variableIterator.next(), dest, evidence, Direction.UP)) {
+                        return false;
+                    }
                 }
+
             }
             return true;
 
 
         } else {
             if (direction == Direction.DOWN) {
-                for (Variable child : src.getChildren()) {
+
+                Iterator<Variable> variableIterator = src.getChildren().iterator();
+                while (variableIterator.hasNext()) {
+                    Variable child = variableIterator.next();
                     if (child != from) {
-                        if (!BouncingBall(src, child, dest, evidence, Direction.DOWN)) {return false;}
+                        if (!BouncingBall(src, child, dest, evidence, Direction.DOWN)) {
+                            return false;
+                        }
                     }
                 }
+
             } else {
-                for (Variable parent : src.getParents()) {
+
+                Iterator<Variable> variableIterator = src.getParents().iterator();
+                while (variableIterator.hasNext()) {
+                    Variable parent = variableIterator.next();
                     if (parent != from) {
-                        if (!BouncingBall(src, parent, dest, evidence, Direction.UP)) {return false;}
+                        if (!BouncingBall(src, parent, dest, evidence, Direction.UP)) {
+                            return false;
+                        }
                     }
                 }
-                for (Variable child : src.getChildren()) {
+
+                variableIterator = src.getChildren().iterator();
+                while (variableIterator.hasNext()) {
+                    Variable child = variableIterator.next();
                     if (child != from) {
-                        if (!BouncingBall(src, child, dest, evidence, Direction.DOWN)) {return false;}
+                        if (!BouncingBall(src, child, dest, evidence, Direction.DOWN)) {
+                            return false;
+                        }
                     }
+
                 }
             }
             return true;
