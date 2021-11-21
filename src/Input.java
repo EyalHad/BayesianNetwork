@@ -1,26 +1,26 @@
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Scanner;
+import java.util.*;
 
 public class Input {
 
-    private String _XML_filename;
-    private final ArrayList<String> rawData;
+    private static String _XML_filename;
+    private static final ArrayList<String> rawData = new ArrayList<>();
 
-    private String _StartNode;
-    private String _GoalNode;
-    private String[] _Evidence;
+    private static String[] _Evidence;
 
 
-    public Input(String filename){
-            rawData = new ArrayList<>();
-            fileRead(filename);
-            new XMLParser(_XML_filename);
-            mineData();
+    public Input(String filename) {
+        fileRead(filename);
     }
 
+    public static void readXML() {
+        new XMLParser(_XML_filename);
+    }
+
+    public static void startAlgorithms() {
+        mineData();
+    }
 
     private void fileRead(String input) {
 
@@ -35,6 +35,7 @@ public class Input {
                 rawData.add(data);
 
             }
+            // first row of the file contains the xml file name
             _XML_filename = rawData.get(0);
             myReader.close();
 
@@ -44,25 +45,54 @@ public class Input {
         }
     }
 
-    private void mineData(){
+    private static void mineData() {
+
+        // The second row all the file contains the query's
         int index = 1;
         String temp = rawData.get(index);
 
-        while (temp.charAt(1) != '('){
+        while (temp.charAt(1) != '(') {
 
             String[] query = temp.split("\\|");
-            if (query.length > 1){ _Evidence = query[1].split(","); }
+            if (query.length > 1) {
+                _Evidence = query[1].split(",");
+            }
 
             String[] leftSide = query[0].split("-");
-            _StartNode = leftSide[0];
-            _GoalNode = leftSide[1];
+            String src = leftSide[0];
+            String dest = leftSide[1];
 
-            BayesBall bounce = new BayesBall(_StartNode,_GoalNode,_Evidence);
+            BayesBall bounce = new BayesBall(src, dest, _Evidence);
             Output.addLine(bounce.isIndependent() ? "yes\n" : "no\n");
 
             temp = rawData.get(++index);
         }
+
+        for (int i = index; i < rawData.size(); i++) {
+            temp = rawData.get(i);
+            temp = temp.substring(2);
+
+            String[] query = temp.split("\\)");
+            String[] hiddenALL = query[1].substring(1).split("-");
+            String[] leftSide = query[0].split("\\|");
+
+            String src = leftSide[0].charAt(0) + "";
+            _Evidence = leftSide[1].split(",");
+
+            Queue<String> toFactors = new LinkedList<>();
+
+            for (String hidden: hiddenALL) {
+                BayesBall bounce = new BayesBall(src, hidden, _Evidence);
+                if (!bounce.isIndependent()){
+                    if(VariableElimination.BFS(src, hidden, _Evidence)) {
+                        toFactors.add(hidden);
+                    }
+                }
+            }
+
+
+
+
+        }
     }
-
-
 }
