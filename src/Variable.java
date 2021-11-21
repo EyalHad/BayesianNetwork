@@ -104,10 +104,14 @@ public class Variable {
             return matrix;
         }
 
+        public HashMap<String, Double> get_TABLE() {
+            return _TABLE;
+        }
+
         @Override
         public String toString() {
             return _TABLE.keySet().stream()
-                    .map(s -> s.toString() + "->" + _TABLE.get(s) + "\n")
+                    .map(s -> s + "-> " + _TABLE.get(s) + "\n")
                     .collect(Collectors.joining());
         }
 
