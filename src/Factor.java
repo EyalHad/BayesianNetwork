@@ -1,48 +1,94 @@
-import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.*;
 
 public class Factor {
-    Variable variable;
-    HashMap<String, Double> _FACTOR_TABLE = new HashMap<>();
+    List<String> names;
+    //    HashSet<Variable> variables = new HashSet<>();
+    HashMap<List<String>, Double> factorTable;
 
     private static Network net;
+
     public static void setNet(Network network) {
         net = network;
     }
 
-    public Factor(Variable variable, String[] evidences, String q){
-//        System.out.println(variable.getName());
-        this.variable = variable;
-        HashMap<String,Double> cptTable = variable.getCpt().get_TABLE();
-        ArrayList<String> parentInEvidence = new ArrayList<>();
-        parentInEvidence.add(q);
-        for (String ev:evidences) {
-            String[] parent = ev.split("=");
-            Variable potentialParent = net.getVariable(parent[0]);
-            if (variable.getParents().contains(potentialParent)){
-                parentInEvidence.add(ev);
-            }
+    public Factor(Variable variable, String[] evidences) {
+        this.names = new ArrayList<>();
+        this.factorTable = new HashMap<>();
+
+        boolean flag = false;
+
+        names.add(variable.getName());
+        for (Variable parent :
+                variable.getParents()) {
+            names.add(parent.getName());
         }
-        for (String key: cptTable.keySet()) {
-            for (int i = 0; i < parentInEvidence.size(); i++) {
-                if (key.contains(parentInEvidence.get(i))){
-                    _FACTOR_TABLE.put(key,cptTable.get(key));
+        for (String name:
+             names) {
+            for (String ev:
+                 evidences) {
+                if (ev.split("=")[0].equals(name)) {
+                    flag = true;
+                    break;
                 }
             }
         }
-        if (_FACTOR_TABLE.isEmpty()){
-            for (String key: cptTable.keySet()) {
-                _FACTOR_TABLE.put(key,cptTable.get(key));
+        HashMap<HashSet<String>, Double> asSets = variable.getCpt().getAsSets();
+        List<String> key;
+
+        if (!flag) {
+            for (HashSet<String> s :
+                    asSets.keySet()) {
+
+                key = new ArrayList<String>(s);
+                this.factorTable.put(key, asSets.get(s));
+            }
+        } else {
+            for (HashSet<String> s :
+                    asSets.keySet()) {
+
+                key = new ArrayList<String>();
+
+                Iterator<String> iterator = s.iterator();
+                while (iterator.hasNext()) {
+                    String toAdd = iterator.next();
+                    for (String possibleParent :
+                            evidences) {
+                        if (toAdd.equals(possibleParent)) {
+                            key.addAll(s);
+                            this.factorTable.put(key, asSets.get(s));
+                        }
+                    }
+                }
             }
         }
+
+//        System.out.println(this);
+
+    }
+
+    public Factor(Factor first, Factor second, Variable var) {
+
+        List<String> newNames = new ArrayList<>();
+        for (String name1:
+                first.names) {
+            if (!newNames.contains(name1)) { newNames.add(name1); }
+            for (String name2:
+                 second.names) {
+                if (!newNames.contains(name2)) { newNames.add(name2); }
+            }
+        }
+        this.names = newNames;
+
+        this.factorTable = new HashMap<>();
+        System.out.println(this);
     }
 
     @Override
     public String toString() {
         StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append(variable.getName()).append("\n");
-        for (String key: _FACTOR_TABLE.keySet()) {
-            stringBuilder.append(key).append(" => ").append(_FACTOR_TABLE.get(key)).append("\n");
+        stringBuilder.append(names.toString()).append("\n");
+        for (List<String> key : factorTable.keySet()) {
+            stringBuilder.append(key.toString()).append(" => ").append(factorTable.get(key)).append("\n");
         }
         stringBuilder.append("\n");
         return stringBuilder.toString();

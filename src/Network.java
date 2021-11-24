@@ -19,6 +19,10 @@ public class Network {
         nodes.put(variable.getName(), variable);
     }
 
+    public HashMap<String, Variable> getNodes() {
+        return nodes;
+    }
+
     public void addEdge(String name, Variable variable) {
         graph.get(name).add(variable);
     }

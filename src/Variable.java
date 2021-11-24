@@ -6,10 +6,12 @@ public class Variable {
 
     private final String name;
     private final String[] outComes;
+
     private final Set<Variable> parents = new HashSet<>();
     private final Set<Variable> children = new HashSet<>();
 
-    private CPT cpt = new CPT(); // Conditional Probability Table
+    // Conditional Probability Table
+    private final CPT cpt = new CPT();
 
 
     public Variable(String n, String[] o) {
@@ -51,7 +53,6 @@ public class Variable {
         return "Variable: " + name + "\n" + printParents() + "\n" + printChildren() +
                 "\nOutcomes = " + Arrays.toString(outComes) + "\n" + cpt + "\n";
     }
-
     private String printParents() {
         if (parents.isEmpty()) return "NO PARENTS";
         StringBuilder stringBuilder = new StringBuilder();
@@ -61,7 +62,6 @@ public class Variable {
         }
         return stringBuilder.toString();
     }
-
     private String printChildren() {
         if (children.isEmpty()) return "NO CHILDREN";
         StringBuilder stringBuilder = new StringBuilder();
@@ -85,15 +85,21 @@ public class Variable {
 
     public static class CPT {
 
-        private final HashMap<String, Double> _TABLE;
+        private final HashMap<String, Double> cptMap;
+        private final HashMap<HashSet<String>, Double> forQuery;
         private String[][] matrix;
 
         public CPT() {
-            _TABLE = new HashMap<>();
+            cptMap = new HashMap<>();
+            forQuery = new HashMap<>();
+        }
+
+        public void addDependency(HashSet<String> vars, double p){
+            forQuery.put(vars,p);
         }
 
         public void addRow(String givens, double probability) {
-            _TABLE.put(givens, probability);
+            cptMap.put(givens, probability);
         }
 
         public void addMatrix(String[][] matrix) {
@@ -104,14 +110,18 @@ public class Variable {
             return matrix;
         }
 
-        public HashMap<String, Double> get_TABLE() {
-            return _TABLE;
+        public HashMap<String, Double> getCptMap() {
+            return cptMap;
+        }
+
+        public HashMap<HashSet<String>, Double> getAsSets() {
+            return forQuery;
         }
 
         @Override
         public String toString() {
-            return _TABLE.keySet().stream()
-                    .map(s -> s + "-> " + _TABLE.get(s) + "\n")
+            return cptMap.keySet().stream()
+                    .map(s -> s + "-> " + cptMap.get(s) + "\n")
                     .collect(Collectors.joining());
         }
 

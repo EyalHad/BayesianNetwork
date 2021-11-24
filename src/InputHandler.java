@@ -11,17 +11,16 @@ import java.util.*;
 
 public class InputHandler {
 
-    private static String _XML_filename;
-    private static final ArrayList<String> rawData = new ArrayList<>();
+    private static String _XML_filename; // this will keep the XML file name
+    private static final ArrayList<String> rawData = new ArrayList<>(); // every row of the input file, as it is,
 
-    private static String[] _Evidence;
 
     public InputHandler(String filename) {
         fileRead(filename);
     }
 
-    public static void readXML() {
-        new XMLParser(_XML_filename);
+    public static void readXMLFile() {
+        XMLParser.readXML(_XML_filename);
     }
 
     public static void startAlgorithms() {
@@ -56,54 +55,86 @@ public class InputHandler {
         // The second row all the file contains the query's
         int index = 1;
         String temp = rawData.get(index);
+        String[] evidences = new String[0];
 
+        /**
+         First While loop for BayesBall queries
+         */
         while (temp.charAt(1) != '(') {
 
             String[] query = temp.split("\\|");
             if (query.length > 1) {
-                _Evidence = query[1].split(",");
+                evidences = query[1].split(",");
             }
 
             String[] leftSide = query[0].split("-");
             String src = leftSide[0];
             String dest = leftSide[1];
 
-            BayesBall bounce = new BayesBall(src, dest, _Evidence);
+            BayesBall bounce = new BayesBall(src, dest, evidences);
             Output.addLine(bounce.isIndependent() ? "yes\n" : "no\n");
 
             temp = rawData.get(++index);
         }
 
+        /**
+         Second loop for Variable Elimination queries
+         */
+
         for (int i = index; i < rawData.size(); i++) {
             temp = rawData.get(i);
-            temp = temp.substring(2);
 
-            String[] query = temp.split("\\)");
-            String[] hiddenALL = query[1].substring(1).split("-");
-            String[] leftSide = query[0].split("\\|");
+            temp = temp.substring(2);                                   // "P(A=T|B=T,C=T) D-E-F" => "A=T|B=T,C=T) D-E-F"
+            String[] queryAndEvidencesAndHidden = temp.split("\\)");                    // "A=T|B=T,C=T) D-E-F" => ["A=T|B=T,C=T"], [" D-E-F"]
+            String[] allHidden = queryAndEvidencesAndHidden[1].substring(1).split("-"); // [" D-E-F"] =>  ["D"], ["E"], ["F"]
+            String[] queryAndEvidences = queryAndEvidencesAndHidden[0].split("\\|");             // ["A=T|B=T,C=T"] => ["A=T"], ["B=T,C=T"]
+            String queryVariable = queryAndEvidences[0].split("=")[0]; // src = "A"
 
-            String src = leftSide[0].charAt(0) + "";
+            String query = queryAndEvidences[0];
+            evidences = queryAndEvidences[1].split(",");                   // ["B=T,C=T"] => ["B=T"], ["C=T"]
 
-            _Evidence = leftSide[1].split(",");
+            VariableElimination algorithm = new VariableElimination(query, evidences);
 
-            Queue<String> toFactors = new LinkedList<>();
+//            if (algorithm.inCPT(query, evidences)) {
+//                Output.addLine(VariableElimination.getAnswer() + ",0,0\n");
+//            }
 
-            for (String hidden : hiddenALL) {
-                BayesBall bounce = new BayesBall(src, hidden, _Evidence);
+            for (String name : XMLParser.net.getNodes().keySet()) {
+                Variable variable = XMLParser.net.getVariable(name);
+                Factor factor = new Factor(variable, evidences);
+                algorithm.getFactorMap().put(factor.names, factor);
+            }
+            System.out.println("`````````````````````````````````````");
+
+
+            for (String hidden : allHidden) {
+
+                BayesBall bounce = new BayesBall(queryVariable, hidden, evidences);
                 if (!bounce.isIndependent()) {
-                    if (VariableElimination.BFS(src, hidden, _Evidence)) {
-//                    System.out.println(rawData.get(i) + " checking: " + hidden + ", " + VariableElimination.BFS(src, hidden, _Evidence));
-                        toFactors.add(hidden);
+
+                    if (algorithm.BFS(queryVariable, hidden, evidences)) {
+                        algorithm.addToOrder(hidden);
+                    } else {
+                        Variable remove = XMLParser.net.getVariable(hidden);
+                        String removeHiddenName = remove.getName();
+                        for (Variable parent :
+                                remove.getParents()) {
+                            removeHiddenName += parent.getName();
+                        }
+                        algorithm.getFactorMap().remove(removeHiddenName);
                     }
+                } else {
+                    Variable remove = XMLParser.net.getVariable(hidden);
+                    String removeHiddenName = remove.getName();
+                    for (Variable parent :
+                            remove.getParents()) {
+                        removeHiddenName += parent.getName();
+                    }
+                    algorithm.getFactorMap().remove(removeHiddenName);
                 }
             }
-            Queue<Factor> factors = new LinkedList<>();
-            while (!toFactors.isEmpty()) {
-                Variable variable = XMLParser.net.getVariable(toFactors.poll());
-                Factor factor = new Factor(variable, _Evidence, leftSide[0]);
-                System.out.println(factor);
-                factors.add(factor);
-            }
+
+            algorithm.start();
 
 
         }
@@ -117,8 +148,9 @@ public class InputHandler {
     public static class XMLParser {
 
         public static Network net;
+        private static boolean print = false;
 
-        public XMLParser(String FILENAME) {
+        public static void readXML(String FILENAME) {
 
             try {
 
@@ -130,7 +162,10 @@ public class InputHandler {
 
                 doc.getDocumentElement().normalize();
 
+                /** Initializing Network */
                 net = new Network();
+
+                /** Contain each VARIABLE as a LIST */
                 NodeList VARIABLE = doc.getElementsByTagName("VARIABLE");
 
                 for (int i = 0; i < VARIABLE.getLength(); i++) {
@@ -203,13 +238,25 @@ public class InputHandler {
 
                                     for (int l = 0; l < outcomes; l++) {
                                         StringBuilder set = new StringBuilder();
+                                        HashSet<String> vars = new HashSet<>();
+
                                         tableNoParents[l + 1][0] = netVariable.getOutComes()[l];
                                         tableNoParents[l + 1][1] = probabilitiesAsStrings[l];
-                                        set.append(varName + "=" + tableNoParents[l + 1][0]);
+
+                                        vars.add(varName + "=" + tableNoParents[l + 1][0]);
+                                        set.append(varName).append("=").append(tableNoParents[l + 1][0]);
                                         netVariable.getCpt().addRow(set.toString(), Double.parseDouble(probabilitiesAsStrings[l]));
+                                        netVariable.getCpt().addDependency(vars, Double.parseDouble(probabilitiesAsStrings[l]));
+
 
                                     }
                                     netVariable.getCpt().addMatrix(tableNoParents);
+                                    if (print) {
+                                        for (String[] s : tableNoParents) {
+                                            System.out.println(Arrays.toString(s));
+                                        }
+                                        System.out.println("--------------------------------------");
+                                    }
 
                                 } else {
 
@@ -266,20 +313,33 @@ public class InputHandler {
 
                                     // Adding the information that has been gathered to the network
                                     for (int line = 1; line < tableROWS; line++) {
+                                        HashSet<String> vars = new HashSet<>();
                                         StringBuilder set = new StringBuilder();
 
                                         String FOR = varName + "=" + cpt[line][0] + ", ";
                                         set.append(FOR);
+                                        vars.add(FOR.substring(0, FOR.length() - 2));
                                         for (int k = 1; k < tableCOLUMNS - 1; k++) {
                                             String GIVENS = cpt[0][k] + "=" + cpt[line][k] + ", ";
                                             set.append(GIVENS);
+                                            vars.add(GIVENS.substring(0, GIVENS.length() - 2));
                                         }
 
                                         double stringToDouble = Double.parseDouble(cpt[line][tableCOLUMNS - 1]);
-
+                                        netVariable.getCpt().addDependency(vars, stringToDouble);
                                         netVariable.getCpt().addRow(set.toString(), stringToDouble);
                                         netVariable.getCpt().addMatrix(cpt);
+
+
                                     }
+
+                                    if (print) {
+                                        for (String[] s : cpt) {
+                                            System.out.println(Arrays.toString(s));
+                                        }
+                                        System.out.println("--------------------------------------");
+                                    }
+
                                 }
                             }
                         } catch (ClassCastException ignored) { /* EMPTY */ }
