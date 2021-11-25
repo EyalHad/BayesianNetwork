@@ -1,4 +1,6 @@
+
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class Factor {
     List<String> names;
@@ -78,11 +80,26 @@ public class Factor {
             }
         }
         this.names = newNames;
+        List<String> merge = first.names;
+        merge.retainAll(second.names);
+        merge = merge.stream().distinct().collect(Collectors.toList());
+
+        for (String v: merge) {
+
+        }
 
         this.factorTable = new HashMap<>();
+
+
+
         System.out.println(this);
     }
 
+
+    private void changeToMatrix(Factor factor){
+        int columns = factor.names.size() + 1;
+
+    }
     @Override
     public String toString() {
         StringBuilder stringBuilder = new StringBuilder();

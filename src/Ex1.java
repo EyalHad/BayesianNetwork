@@ -1,3 +1,5 @@
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class Ex1 {
 
@@ -11,6 +13,9 @@ public class Ex1 {
 
         // The outcome from each algorithm is written to output.txt
         Output.writeToFile();
-    }
 
+
+
+    }
 }
+

@@ -52,92 +52,90 @@ public class InputHandler {
 
     private static void mineData() {
 
-        // The second row all the file contains the query's
-        int index = 1;
-        String temp = rawData.get(index);
+
+        String[] query = new String[0];
         String[] evidences = new String[0];
+        // The second row all the file contains the query's
+        for (int i = 1; i < rawData.size(); i++) {
 
-        /**
-         First While loop for BayesBall queries
-         */
-        while (temp.charAt(1) != '(') {
+            String temp = rawData.get(i);
+            String algorithm = (temp.charAt(1) != '(') ? "Bayes Ball" : "Variable Elimination";
 
-            String[] query = temp.split("\\|");
-            if (query.length > 1) {
-                evidences = query[1].split(",");
-            }
+            switch (algorithm) {
 
-            String[] leftSide = query[0].split("-");
-            String src = leftSide[0];
-            String dest = leftSide[1];
+                case "Bayes Ball":
 
-            BayesBall bounce = new BayesBall(src, dest, evidences);
-            Output.addLine(bounce.isIndependent() ? "yes\n" : "no\n");
+                    query = temp.split("\\|");
+                    if (query.length > 1) {
+                        evidences = query[1].split(",");
+                    }
 
-            temp = rawData.get(++index);
-        }
+                    String[] leftSide = query[0].split("-");
+                    String src = leftSide[0];
+                    String dest = leftSide[1];
 
-        /**
-         Second loop for Variable Elimination queries
-         */
+                    BayesBall bounce = new BayesBall(src, dest, evidences);
+                    Output.addLine(bounce.isIndependent() ? "yes\n" : "no\n");
+                    break;
 
-        for (int i = index; i < rawData.size(); i++) {
-            temp = rawData.get(i);
+                case "Variable Elimination":
 
-            temp = temp.substring(2);                                   // "P(A=T|B=T,C=T) D-E-F" => "A=T|B=T,C=T) D-E-F"
-            String[] queryAndEvidencesAndHidden = temp.split("\\)");                    // "A=T|B=T,C=T) D-E-F" => ["A=T|B=T,C=T"], [" D-E-F"]
-            String[] allHidden = queryAndEvidencesAndHidden[1].substring(1).split("-"); // [" D-E-F"] =>  ["D"], ["E"], ["F"]
-            String[] queryAndEvidences = queryAndEvidencesAndHidden[0].split("\\|");             // ["A=T|B=T,C=T"] => ["A=T"], ["B=T,C=T"]
-            String queryVariable = queryAndEvidences[0].split("=")[0]; // src = "A"
+                    temp = temp.substring(2);                                                              // "P(A=T|B=T,C=T) D-E-F" => "A=T|B=T,C=T) D-E-F"
+                    String[] queryAndEvidencesAndHidden = temp.split("\\)");                         // "A=T|B=T,C=T) D-E-F" => ["A=T|B=T,C=T"], [" D-E-F"]
+                    String[] allHidden = queryAndEvidencesAndHidden[1].substring(1).split("-");      // [" D-E-F"] =>  ["D"], ["E"], ["F"]
+                    String[] queryAndEvidences = queryAndEvidencesAndHidden[0].split("\\|");         // ["A=T|B=T,C=T"] => ["A=T"], ["B=T,C=T"]
+                    String queryVariable = queryAndEvidences[0].split("=")[0]; // src = "A"
 
-            String query = queryAndEvidences[0];
-            evidences = queryAndEvidences[1].split(",");                   // ["B=T,C=T"] => ["B=T"], ["C=T"]
+                    String queryString = queryAndEvidences[0];
+                    evidences = queryAndEvidences[1].split(",");                                     // ["B=T,C=T"] => ["B=T"], ["C=T"]
 
-            VariableElimination algorithm = new VariableElimination(query, evidences);
+                    VariableElimination variableElimination = new VariableElimination(queryString, evidences);
 
 //            if (algorithm.inCPT(query, evidences)) {
 //                Output.addLine(VariableElimination.getAnswer() + ",0,0\n");
 //            }
 
-            for (String name : XMLParser.net.getNodes().keySet()) {
-                Variable variable = XMLParser.net.getVariable(name);
-                Factor factor = new Factor(variable, evidences);
-                algorithm.getFactorMap().put(factor.names, factor);
-            }
-            System.out.println("`````````````````````````````````````");
+                    for (String name : XMLParser.net.getNodes().keySet()) {
+                        Variable variable = XMLParser.net.getVariable(name);
+                        Factor factor = new Factor(variable, evidences);
+                        variableElimination.getFactorMap().put(factor.names, factor);
+                    }
+                    System.out.println("`````````````````````````````````````");
 
 
-            for (String hidden : allHidden) {
+                    for (String hidden : allHidden) {
 
-                BayesBall bounce = new BayesBall(queryVariable, hidden, evidences);
-                if (!bounce.isIndependent()) {
+                        BayesBall bayesBall = new BayesBall(queryVariable, hidden, evidences);
+                        if (!bayesBall.isIndependent()) {
 
-                    if (algorithm.BFS(queryVariable, hidden, evidences)) {
-                        algorithm.addToOrder(hidden);
-                    } else {
-                        Variable remove = XMLParser.net.getVariable(hidden);
-                        String removeHiddenName = remove.getName();
-                        for (Variable parent :
-                                remove.getParents()) {
-                            removeHiddenName += parent.getName();
+                            if (variableElimination.BFS(queryVariable, hidden, evidences)) {
+                                variableElimination.addToOrder(hidden);
+                            } else {
+                                Variable remove = XMLParser.net.getVariable(hidden);
+                                String removeHiddenName = remove.getName();
+                                for (Variable parent :
+                                        remove.getParents()) {
+                                    removeHiddenName += parent.getName();
+                                }
+                                variableElimination.getFactorMap().remove(removeHiddenName);
+                            }
+                        } else {
+                            Variable remove = XMLParser.net.getVariable(hidden);
+                            String removeHiddenName = remove.getName();
+                            for (Variable parent :
+                                    remove.getParents()) {
+                                removeHiddenName += parent.getName();
+                            }
+                            variableElimination.getFactorMap().remove(removeHiddenName);
                         }
-                        algorithm.getFactorMap().remove(removeHiddenName);
                     }
-                } else {
-                    Variable remove = XMLParser.net.getVariable(hidden);
-                    String removeHiddenName = remove.getName();
-                    for (Variable parent :
-                            remove.getParents()) {
-                        removeHiddenName += parent.getName();
-                    }
-                    algorithm.getFactorMap().remove(removeHiddenName);
-                }
+
+                    variableElimination.start();
+
             }
-
-            algorithm.start();
-
 
         }
+
     }
 
 
@@ -235,6 +233,8 @@ public class InputHandler {
                                 if (parents[0].equals("")) {
 
                                     String[][] tableNoParents = new String[outcomes + 1][2];
+                                    tableNoParents[0][0] = varName;
+                                    tableNoParents[0][1] = "Probability";
 
                                     for (int l = 0; l < outcomes; l++) {
                                         StringBuilder set = new StringBuilder();
@@ -345,7 +345,7 @@ public class InputHandler {
                         } catch (ClassCastException ignored) { /* EMPTY */ }
                     }
                 }
-//            System.out.println(net.toString());
+            System.out.println(net.toString());
                 BayesBall.setNet(net);
                 VariableElimination.setNet(net);
                 Factor.setNet(net);

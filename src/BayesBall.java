@@ -1,3 +1,4 @@
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 
@@ -7,6 +8,9 @@ public class BayesBall {
         UP,
         DOWN
     }
+
+    private HashMap<Variable, Boolean> fromChild = new HashMap<>();
+    private HashMap<Variable, Boolean> fromParent = new HashMap<>();
 
     private static Network net;
 
@@ -26,6 +30,10 @@ public class BayesBall {
                 String[] leftSide = e.split("=");
                 evs.add(net.getVariable(leftSide[0]));
             }
+        for (String v : net.getNodes().keySet()) {
+            fromChild.put(net.getVariable(v), false);
+            fromParent.put(net.getVariable(v), false);
+        }
         // When starting the algorithm - the node that we're coming from is not exist therefore null
         independent = BouncingBall(null, src, dest, evs, Direction.UP);
     }
@@ -43,11 +51,14 @@ public class BayesBall {
 
                 Iterator<Variable> variableIterator = src.getParents().iterator();
                 while (variableIterator.hasNext()) {
-                    if (!BouncingBall(src, variableIterator.next(), dest, evidence, Direction.UP)) {
-                        return false;
+                    Variable parent = variableIterator.next();
+                    if (!fromParent.get(parent)) {
+                        fromParent.put(parent,true);
+                        if (!BouncingBall(src, parent, dest, evidence, Direction.UP)) {
+                            return false;
+                        }
                     }
                 }
-
             }
             return true;
 
@@ -58,7 +69,8 @@ public class BayesBall {
                 Iterator<Variable> variableIterator = src.getChildren().iterator();
                 while (variableIterator.hasNext()) {
                     Variable child = variableIterator.next();
-                    if (child != from) {
+                    if (!fromChild.get(child)) {
+                        fromChild.put(child, true);
                         if (!BouncingBall(src, child, dest, evidence, Direction.DOWN)) {
                             return false;
                         }
@@ -70,9 +82,12 @@ public class BayesBall {
                 Iterator<Variable> variableIterator = src.getParents().iterator();
                 while (variableIterator.hasNext()) {
                     Variable parent = variableIterator.next();
-                    if (parent != from) {
-                        if (!BouncingBall(src, parent, dest, evidence, Direction.UP)) {
-                            return false;
+                    if (fromParent.get(parent)) {
+                        fromParent.put(parent,true);
+                        if (parent != from) {
+                            if (!BouncingBall(src, parent, dest, evidence, Direction.UP)) {
+                                return false;
+                            }
                         }
                     }
                 }
@@ -80,9 +95,12 @@ public class BayesBall {
                 variableIterator = src.getChildren().iterator();
                 while (variableIterator.hasNext()) {
                     Variable child = variableIterator.next();
-                    if (child != from) {
-                        if (!BouncingBall(src, child, dest, evidence, Direction.DOWN)) {
-                            return false;
+                    if (!fromChild.get(child)) {
+                        fromChild.put(child, true);
+                        if (child != from) {
+                            if (!BouncingBall(src, child, dest, evidence, Direction.DOWN)) {
+                                return false;
+                            }
                         }
                     }
 
