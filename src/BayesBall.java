@@ -82,7 +82,7 @@ public class BayesBall {
                 Iterator<Variable> variableIterator = src.getParents().iterator();
                 while (variableIterator.hasNext()) {
                     Variable parent = variableIterator.next();
-                    if (fromParent.get(parent)) {
+                    if (!fromParent.get(parent)) {
                         fromParent.put(parent,true);
                         if (parent != from) {
                             if (!BouncingBall(src, parent, dest, evidence, Direction.UP)) {

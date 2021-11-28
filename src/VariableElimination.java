@@ -3,20 +3,23 @@ import java.util.*;
 
 public class VariableElimination {
     private static double answer;
+    private static int addition;
+    private static int multiply;
     private static Network net;
 
     private String query = "";
     private String[] evidences;
     private final Queue<String> order = new LinkedList<>();
 
-    private HashMap<List<String>, Factor> factorMap = new HashMap<>();
+    private HashMap<Integer, Factor> factorMap = new HashMap<>();
 
     public VariableElimination(String q, String[] ev) {
         query = q;
         evidences = ev;
+        addition = 0;
+        multiply = 0;
     }
 
-    private static Factor minWhile;
 
     public static void setNet(Network network) {
         net = network;
@@ -55,61 +58,121 @@ public class VariableElimination {
         return false;
     }
 
-//    public boolean inCPT(String var, String[] evidences) {
-//        String[] tovar = var.split("=");
-//        Variable child = net.getVariable(tovar[0]);
-//        int parents = child.getParents().size();
-//        int checksum = 0;
-//        HashSet<String> q = new HashSet<>();
-//        for (String parentAstring : evidences) {
-//            String[] split = parentAstring.split("=");
-//            Variable parent = net.getVariable(split[0]);
-//            if (child.getParents().contains(parent)) {
-//                q.add(parentAstring);
-//                checksum++;
-//            }
-//        }
-//        if (checksum != parents) {
-//            return false;
-//        } else {
-//            q.add(var);
-//            answer = child.getCpt().getForQuery().get(q);
-//            System.out.println(getAnswer());
-//        }
-//        return true;
-//    }
+    public boolean inCPT(String var, String[] evidences) {
+        String[] over = var.split("=");
+        Variable variable = net.getVariable(over[0]);
+        if (variable.getParents().size() == 0) {
+            if (evidences.length == 0) {
+                answer = variable.getCpt().getCptMap().get(var);
+                return true;
+            } else {
+                return false;
+            }
+        } else {
+            Set<Variable> set = variable.getParents();
+            HashSet<String> toQuery = new HashSet<>();
+            toQuery.add(var);
+            if (set.size() == evidences.length) {
+                for (String ev :
+                        evidences) {
+                    String varString = ev.split("=")[0];
+                    if (!set.contains(net.getVariable(varString))) {
+                        return false;
+                    }
+                    toQuery.add(ev);
+                }
+                answer = variable.getCpt().getAsSets().get(toQuery);
+                return true;
+            } else {
+                return false;
+            }
 
 
+        }
+    }
 
     public static String getAnswer() {
         return String.format("%.5f", answer);
     }
 
+    public static int getAddition() {
+        return addition;
+    }
+
+    public static int getMultiply() {
+        return multiply;
+    }
+
     public void start() {
 
-        while (!order.isEmpty()){
-
+        while (order.size() != 1) {
             String hidden = order.poll();
             Queue<Factor> pq = new PriorityQueue<>(new FactorComparator());
 
-            ArrayList<List<String>> forRemoval = new ArrayList<>();
-            for (List<String> name:
-                 factorMap.keySet()) {
-                if (name.contains(hidden)){
+            ArrayList<Integer> forRemoval = new ArrayList<>();
+            for (int id : factorMap.keySet()) {
 
-                    pq.add(factorMap.get(name));
-                    forRemoval.add(name);
+                Factor temp = factorMap.get(id);
+
+                if (temp.names.contains(hidden)) {
+
+                    pq.add(factorMap.get(id));
+                    forRemoval.add(id);
+
                 }
+
             }
-            for (List<String> name: forRemoval) {
+            for (int name : forRemoval) {
                 factorMap.remove(name);
             }
 
-            while (pq.size() != 1){
-                Factor combined = new Factor(pq.poll(),pq.poll(), net.getVariable(hidden));
+            while (pq.size() != 1 && !pq.isEmpty()) {
+                System.out.println("-------------------PICK-------------------");
+                Factor left = pq.poll();
+                System.out.println(left.id+"\n"+left);
+                System.out.println("-------------------PICK-------------------");
+                Factor right = pq.poll();
+                System.out.println(right.id+"\n"+right);
+                Factor combined = new Factor(left,right);
+                System.out.println("-------------------After JOIN-------------------");
+                System.out.println(combined.id+"\n"+combined);
                 pq.add(combined);
             }
+            if (!pq.isEmpty()) {
+                Factor afterSum = new Factor(pq.poll());
+                System.out.println("-------------------After SUM-------------------");
+                System.out.println(afterSum.id+"\n"+afterSum);
+                this.factorMap.put(afterSum.id, afterSum);
+            }
+
         }
+        Queue<Factor> pq = new PriorityQueue<>(new FactorComparator());
+        String q = query.split("=")[0];
+        if (factorMap.size() > 1) {
+            for (int id :
+                    factorMap.keySet()) {
+                Factor te = factorMap.get(id);
+                if (te.names.contains(q))
+                    pq.add(factorMap.get(id));
+            }
+        }
+        while (pq.size() != 1) {
+            Factor combined = new Factor(pq.poll(), pq.poll());
+            pq.add(combined);
+        }
+        double bottom = 0;
+        Factor last = pq.poll();
+        for (double val :
+                last.factorTable.values()) {
+            addAddition();
+            bottom += val;
+        }
+        addition--;
+        List<String> que = new ArrayList<>();
+        que.add(query);
+        double up = last.factorTable.get(que);
+        answer = up / bottom;
+
 
     }
 
@@ -117,7 +180,15 @@ public class VariableElimination {
         order.add(hidden);
     }
 
-    public HashMap<List<String>, Factor> getFactorMap() {
+    public static void addMultiply() {
+        multiply++;
+    }
+
+    public static void addAddition() {
+        addition++;
+    }
+
+    public HashMap<Integer, Factor> getFactorMap() {
         return factorMap;
     }
 }
