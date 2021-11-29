@@ -363,7 +363,7 @@ public class InputHandler {
                         } catch (ClassCastException ignored) { /* EMPTY */ }
                     }
                 }
-                System.out.println(net.toString());
+//                System.out.println(net.toString());
                 BayesBall.setNet(net);
                 VariableElimination.setNet(net);
                 Factor.setNet(net);
