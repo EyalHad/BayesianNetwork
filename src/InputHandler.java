@@ -90,7 +90,8 @@ public class InputHandler {
                         evidences = queryAndEvidences[1].split(",");                                     // ["B=T,C=T"] => ["B=T"], ["C=T"]
 
                     VariableElimination variableElimination = new VariableElimination(queryString, evidences);
-                    System.out.println(queryString);
+                    System.out.println("####################################################################################################");
+                    System.out.println(rawData.get(i));
                     if (variableElimination.inCPT(queryString, evidences)) {
                         Output.addLine(VariableElimination.getAnswer() + "," +
                                 VariableElimination.getAddition() + "," +
@@ -103,7 +104,7 @@ public class InputHandler {
                         Factor factor = new Factor(variable, evidences, ++id);
                         variableElimination.getFactorMap().put(factor.id, factor);
                     }
-                    System.out.println("`````````````````````````````````````");
+                    System.out.println("####################################################################################################");
 
 
                     for (String hidden : allHidden) {
@@ -161,7 +162,7 @@ public class InputHandler {
     public static class XMLParser {
 
         public static Network net;
-        private static boolean print = false;
+        private static boolean print = true;
 
         public static void readXML(String FILENAME) {
 

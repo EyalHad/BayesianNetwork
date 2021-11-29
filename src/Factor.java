@@ -29,23 +29,24 @@ public class Factor {
         this.factorTable = new HashMap<>();
 
         boolean flag = false;
-        int numOfParentsInEvidence = 0;
 
         names.add(variable.getName());
         for (Variable parent :
                 variable.getParents()) {
             names.add(parent.getName());
         }
+        List<String> toRrR = new ArrayList<>();
         for (String name : names) {
             for (String ev : evidences) {
                 evidence.add(ev);
                 if (ev.split("=")[0].equals(name)) {
-                    numOfParentsInEvidence++;
                     flag = true;
+                    toRrR.add(name);
                     break;
                 }
             }
         }
+        names.removeAll(toRrR);
         HashMap<HashSet<String>, Double> asSets = variable.getCpt().getAsSets();
         List<String> key;
 
@@ -70,13 +71,29 @@ public class Factor {
                 List<String> mashu = new ArrayList<>(s);
                 mashu.retainAll(evidenceAsList);
                 mashu = mashu.stream().distinct().collect(Collectors.toList());
+                List<String> rmoving = new ArrayList<>();
+                for (String string:
+                     s) {
+                    for (String evi:
+                         evidences) {
+                        if(string.split("=")[0].equals(evi.split("=")[0])){
+                            rmoving.add(string);
+                        }
+                    }
+                }
+                HashSet<String> copy = new HashSet<>(s);
+                for (String more:
+                    rmoving ) {
+                    if( s.contains(more)){
+                        copy.remove(more);
+                    }
+                }
 
                 if (mashu.size() == evidenceAsList.size() ) {
 
                     key = new ArrayList<String>();
 
-
-                    key.addAll(s);
+                    key.addAll(copy);
                     this.factorTable.put(key, asSets.get(s));
                 }
             }
