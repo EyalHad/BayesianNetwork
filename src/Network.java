@@ -48,7 +48,6 @@ public class Network {
             if (!variables.isEmpty()) {
                 s.append("\n");
             }
-
         }
         return s.toString();
     }

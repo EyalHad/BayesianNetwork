@@ -94,9 +94,12 @@ public class BayesBall {
 
                 variableIterator = src.getChildren().iterator();
                 while (variableIterator.hasNext()) {
+
                     Variable child = variableIterator.next();
+
                     if (!fromChild.get(child)) {
-                        fromChild.put(child, true);
+
+
                         if (child != from) {
                             if (!BouncingBall(src, child, dest, evidence, Direction.DOWN)) {
                                 return false;
@@ -108,7 +111,6 @@ public class BayesBall {
             }
             return true;
         }
-
     }
 
     public boolean isIndependent() {

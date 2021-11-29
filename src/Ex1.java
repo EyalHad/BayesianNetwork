@@ -14,8 +14,6 @@ public class Ex1 {
         // The outcome from each algorithm is written to output.txt
         Output.writeToFile();
 
-
-
     }
 }
 

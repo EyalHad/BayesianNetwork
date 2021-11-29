@@ -5,25 +5,24 @@ import java.util.ArrayList;
 public class Output {
 
     private static ArrayList<String> lines;
-
+    private static final String FILENAME = "filename.txt";
     public static void setLines() {
         lines = new ArrayList<>();
     }
 
     public static void addLine(String line) {
         if (lines == null) {
-            lines = new ArrayList<>();
+            setLines();
         }
         lines.add(line);
     }
 
     public static void writeToFile() {
         try {
-            FileWriter myWriter = new FileWriter("filename.txt");
+            FileWriter myWriter = new FileWriter(FILENAME);
             for (String toWrite :
                     lines) {
                 myWriter.write(toWrite);
-
             }
             myWriter.close();
         } catch (IOException e) {

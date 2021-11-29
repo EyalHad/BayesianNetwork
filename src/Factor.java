@@ -15,7 +15,6 @@ public class Factor {
         net = network;
     }
 
-
     public Factor(Variable variable, String[] evidences, int ID) {
         if (ID == 0) {
             Factor.nums = 0;
@@ -41,32 +40,7 @@ public class Factor {
             evidenceAndOutcomeSet.add(evi);
             evidenceSet.add(var);
         }
-//        for (int i = 0; i < temporary[0].length - 1; i++) {
-//
-//            String varString = temporary[0][i];
-//            names.add(varString);
-//
-//            for (String evi : evidences) {
-//
-//                String[] split = evi.split("=");
-//                String var = split[0];
-//                evidenceSet.add(var);
-//                String outcome = split[1];
-//
-//                if (varString.equals(var)) {
-//                    minusColumns++;
-//                    /* temporary[0][i] = "-"; */
-//                    for (int j = 1; j < temporary.length; j++) {
-//                        if (!temporary[j][i].equals(outcome)) {
-//                            minusRows++;
-//                            for (int k = 0; k < temporary[0].length; k++) {
-//                                temporary[j][k] = "-";
-//                            }
-//                        }
-//                    }
-//                }
-//            }
-//        }
+
         for (int i = 0; i < temporary[0].length - 1; i++) {
             String varString = temporary[0][i];
             for (String fromSet : evidenceSet) {
@@ -95,12 +69,14 @@ public class Factor {
         for (int i = 0; i < temporary.length; i++) {
             boolean flag = false;
             for (int j = 0; j < temporary[0].length; j++) {
-                if (temporary[i][j].equals("-")){
+                if (temporary[i][j].equals("-")) {
                     flag = true;
                     break;
                 }
             }
-            if (flag) { minusRows++; }
+            if (flag) {
+                minusRows++;
+            }
         }
 
         names.removeAll(evidenceSet);
@@ -123,8 +99,7 @@ public class Factor {
                 }
             }
         }
-//        System.out.println();
-//        System.out.println(this);
+
 
     }
 
@@ -186,6 +161,7 @@ public class Factor {
             multi *= variable.getOutComes().length;
 
         }
+        // Just for Readability
         this.table[0][names.size()] = "Probability";
 
         for (int p = 1; p < this.table.length; p++) {
@@ -271,7 +247,6 @@ public class Factor {
         }
         this.table[0][names.size()] = "Probability";
 
-        System.out.println();
 
         for (int p = 1; p < this.table.length; p++) {
             List<String> newRow = new ArrayList<>();
@@ -331,7 +306,6 @@ public class Factor {
             }
 
         }
-        System.out.println();
     }
 
     public static double Normalize(Factor toNormal) {

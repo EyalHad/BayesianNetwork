@@ -14,7 +14,6 @@ public class InputHandler {
     private static String _XML_filename; // this will keep the XML file name
     private static final ArrayList<String> rawData = new ArrayList<>(); // every row of the input file, as it is,
 
-
     public InputHandler(String filename) {
         fileRead(filename);
     }
@@ -51,7 +50,6 @@ public class InputHandler {
     }
 
     private static void mineData() {
-
 
         // The second row all the file contains the query's
         for (int i = 1; i < rawData.size(); i++) {
@@ -90,8 +88,8 @@ public class InputHandler {
                         evidences = queryAndEvidences[1].split(",");                                     // ["B=T,C=T"] => ["B=T"], ["C=T"]
 
                     VariableElimination variableElimination = new VariableElimination(queryString, evidences);
-                    System.out.println("####################################################################################################");
-                    System.out.println(rawData.get(i));
+//                    System.out.println("####################################################################################################");
+//                    System.out.println(rawData.get(i));
                     if (variableElimination.inCPT(queryString, evidences)) {
                         Output.addLine(VariableElimination.getAnswer() + "," +
                                 VariableElimination.getAddition() + "," +
@@ -104,7 +102,7 @@ public class InputHandler {
                         Factor factor = new Factor(variable, evidences, ++id);
                         variableElimination.getFactorMap().put(factor.id, factor);
                     }
-                    System.out.println("####################################################################################################");
+//                    System.out.println("####################################################################################################");
 
 
                     for (String hidden : allHidden) {
@@ -149,11 +147,8 @@ public class InputHandler {
                             VariableElimination.getMultiply() + "\n");
 
             }
-
         }
-
     }
-
 
     /**
      * Inner class to parser XML file
@@ -280,7 +275,7 @@ public class InputHandler {
                                         }
                                         System.out.println("--------------------------------------");
                                     }
-                                // The Variable has parents
+                                    // The Variable has parents
                                 } else {
 
                                     int probabilities = probabilitiesAsStrings.length;
@@ -368,7 +363,7 @@ public class InputHandler {
                         } catch (ClassCastException ignored) { /* EMPTY */ }
                     }
                 }
-//                System.out.println(net.toString());
+                System.out.println(net.toString());
                 BayesBall.setNet(net);
                 VariableElimination.setNet(net);
                 Factor.setNet(net);

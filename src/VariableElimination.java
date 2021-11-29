@@ -20,7 +20,6 @@ public class VariableElimination {
         multiply = 0;
     }
 
-
     public static void setNet(Network network) {
         net = network;
     }
@@ -127,22 +126,22 @@ public class VariableElimination {
             }
 
             while (pq.size() != 1 && !pq.isEmpty()) {
-                System.out.println("-------------------PICK-------------------");
+//                System.out.println("-------------------PICK-------------------");
                 Factor left = pq.poll();
                 assert left != null;
-                System.out.println(left.id + "\n" + left);
-                System.out.println("-------------------PICK-------------------");
+//                System.out.println(left.id + "\n" + left);
+//                System.out.println("-------------------PICK-------------------");
                 Factor right = pq.poll();
                 assert right != null;
-                System.out.println(right.id + "\n" + right);
+//                System.out.println(right.id + "\n" + right);
                 Factor combined = new Factor(left, right);
-                System.out.println("-------------------After JOIN-------------------");
-                System.out.println(combined.id + "\n" + combined);
+//                System.out.println("-------------------After JOIN-------------------");
+//                System.out.println(combined.id + "\n" + combined);
                 pq.add(combined);
             }
             Factor afterSum = new Factor(Objects.requireNonNull(pq.poll()), hidden);
-            System.out.println("-------------------After SUM-------------------");
-            System.out.println(afterSum.id + "\n" + afterSum);
+//            System.out.println("-------------------After SUM-------------------");
+//            System.out.println(afterSum.id + "\n" + afterSum);
             this.factorMap.put(afterSum.id, afterSum);
 
 

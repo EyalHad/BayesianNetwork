@@ -13,7 +13,6 @@ public class Variable {
     // Conditional Probability Table
     private final CPT cpt = new CPT();
 
-
     public Variable(String n, String[] o) {
         outComes = o;
         name = n;
@@ -47,12 +46,12 @@ public class Variable {
         return children;
     }
 
-
     @Override
     public String toString() {
         return "Variable: " + name + "\n" + printParents() + "\n" + printChildren() +
-                "\nOutcomes = " + Arrays.toString(outComes) + "\n" + cpt + "\n";
+                "\nOutcomes = " +  Arrays.toString(outComes) +  /* "\n" + cpt + */"\n\n";
     }
+
     private String printParents() {
         if (parents.isEmpty()) return "NO PARENTS";
         StringBuilder stringBuilder = new StringBuilder();
@@ -62,6 +61,7 @@ public class Variable {
         }
         return stringBuilder.toString();
     }
+
     private String printChildren() {
         if (children.isEmpty()) return "NO CHILDREN";
         StringBuilder stringBuilder = new StringBuilder();
