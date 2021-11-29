@@ -1,123 +1,106 @@
-
 import java.util.*;
 import java.util.stream.Collectors;
 
 public class Factor {
+
+    private static int nums;
     public int id;
     List<String> names;
-    //    HashSet<Variable> variables = new HashSet<>();
-    HashMap<List<String>, Double> factorTable;
-    private static List<String> evidence;
-    private static int nums;
+    private String[][] table;
+
 
     private static Network net;
-
     public static void setNet(Network network) {
         net = network;
     }
 
-    public Factor(Variable variable, String[] evidences, int id) {
-        if (id == 0) {
+
+    public Factor(Variable variable, String[] evidences, int ID) {
+        if (ID == 0) {
             Factor.nums = 0;
         } else {
             Factor.nums++;
         }
-        this.id = id;
-
-        this.evidence = new ArrayList<>();
+        this.id = ID;
         this.names = new ArrayList<>();
-        this.factorTable = new HashMap<>();
 
-        boolean flag = false;
+        int rows = variable.getCpt().getMatrix().length;
+        int columns = variable.getCpt().getMatrix()[0].length;
+        String[][] temporary = new String[rows][columns];
+        for (int i = 0; i < rows; i++)
+            temporary[i] = variable.getCpt().getMatrix()[i].clone();
 
-        names.add(variable.getName());
-        for (Variable parent :
-                variable.getParents()) {
-            names.add(parent.getName());
-        }
-        List<String> toRrR = new ArrayList<>();
-        for (String name : names) {
-            for (String ev : evidences) {
-                evidence.add(ev);
-                if (ev.split("=")[0].equals(name)) {
-                    flag = true;
-                    toRrR.add(name);
-                    break;
-                }
-            }
-        }
-        names.removeAll(toRrR);
-        HashMap<HashSet<String>, Double> asSets = variable.getCpt().getAsSets();
-        List<String> key;
+        int minusRows = 0;
+        int minusColumns = 0;
+        Set<String> evidenceSet = new HashSet<>();
+        for (int i = 0; i < temporary[0].length - 1; i++) {
 
-        if (!flag) {
-            for (HashSet<String> s :
-                    asSets.keySet()) {
+            String varString = temporary[0][i];
+            names.add(varString);
 
-                key = new ArrayList<String>(s);
-                this.factorTable.put(key, asSets.get(s));
-            }
-        } else {
+            for (String evi : evidences) {
 
-            List<String> evidenceAsList = new ArrayList<>();
+                String[] split = evi.split("=");
+                String var = split[0];
+                evidenceSet.add(var);
+                String outcome = split[1];
 
-            for (String s : evidences) {
-                String spliy = s.split("=")[0];
-                if (variable.getParents().contains(net.getVariable(spliy)))
-                    evidenceAsList.add(s);
-            }
-            for (HashSet<String> s : asSets.keySet()) {
-
-                List<String> mashu = new ArrayList<>(s);
-                mashu.retainAll(evidenceAsList);
-                mashu = mashu.stream().distinct().collect(Collectors.toList());
-                List<String> rmoving = new ArrayList<>();
-                for (String string:
-                     s) {
-                    for (String evi:
-                         evidences) {
-                        if(string.split("=")[0].equals(evi.split("=")[0])){
-                            rmoving.add(string);
+                if (varString.equals(var)) {
+                    minusColumns++;
+                    /* temporary[0][i] = "-"; */
+                    for (int j = 1; j < temporary.length; j++) {
+                        if (!temporary[j][i].equals(outcome)) {
+                            minusRows++;
+                            for (int k = 0; k < temporary[0].length; k++) {
+                                temporary[j][k] = "-";
+                            }
                         }
                     }
                 }
-                HashSet<String> copy = new HashSet<>(s);
-                for (String more:
-                    rmoving ) {
-                    if( s.contains(more)){
-                        copy.remove(more);
+            }
+        }
+        names.removeAll(evidenceSet);
+        if (minusColumns == 0 && minusRows == 0) {
+            this.table = temporary;
+        } else {
+
+            this.table = new String[rows - minusRows][columns - minusColumns];
+
+            int tableColumn = 0;
+            for (int i = 0; i < temporary[0].length; i++) {
+                if (!evidenceSet.contains(temporary[0][i])) {
+                    int tablesRow = 0;
+                    for (int j = 0; j < temporary.length; j++) {
+                        if (!temporary[j][i].equals("-")) {
+                            this.table[tablesRow++][tableColumn] = temporary[j][i];
+                        }
                     }
-                }
-
-                if (mashu.size() == evidenceAsList.size() ) {
-
-                    key = new ArrayList<String>();
-
-                    key.addAll(copy);
-                    this.factorTable.put(key, asSets.get(s));
+                    tableColumn++;
                 }
             }
         }
-//        System.out.println(this);
+
+        System.out.println(this);
+
     }
 
-    public Factor(Factor first, Factor second) {
+    public Factor(Factor left, Factor right) {
 
         Factor.nums++;
         this.id = Factor.nums;
-//        List<String> newNames = new ArrayList<>();
+
         List<String> inCommon = new ArrayList<>();
         List<String> unCommon = new ArrayList<>();
 
-        for (String name1 : first.names) {
-            if (second.names.contains(name1)) {
+        for (String name1 : left.names) {
+            if (right.names.contains(name1)) {
                 inCommon.add(name1);
             } else {
                 unCommon.add(name1);
             }
         }
-        for (String name2 : second.names) {
-            if (first.names.contains(name2)) {
+        for (String name2 : right.names) {
+            if (left.names.contains(name2)) {
                 inCommon.add(name2);
             } else {
                 unCommon.add(name2);
@@ -126,97 +109,230 @@ public class Factor {
 
         inCommon = inCommon.stream().distinct().collect(Collectors.toList());
         unCommon = unCommon.stream().distinct().collect(Collectors.toList());
+
         this.names = new ArrayList<>(inCommon);
-//        this.names.addAll(unCommon);
-        this.factorTable = new HashMap<>();
-        for (List<String> rowONE : first.factorTable.keySet()) {
-            for (List<String> rowTWO : second.factorTable.keySet()) {
-                List<String> both = new ArrayList<>(rowONE);
-                both.retainAll(rowTWO);
-                if (both.size() == inCommon.size()) {
-                    List<String> key = new ArrayList<>(rowONE);
-                    key.addAll(rowTWO);
-                    key = key.stream().distinct().collect(Collectors.toList());
-                    List<String> forRemoving = new ArrayList<>();
-//                    for (String toRemove : key) {
-//                        if (evidence.contains(toRemove)) {
-//                            forRemoving.add(toRemove);
-//                        }
-//                    }
-//                    for (String remove :
-//                            forRemoving) {
-//                        key.remove(remove);
-//                    }
-                    VariableElimination.addMultiply();
-                    double value = first.factorTable.get(rowONE) * second.factorTable.get(rowTWO);
-                    this.factorTable.put(key, value);
+        this.names.addAll(unCommon);
+
+        int columns = names.size() + 1;
+        int rows = 1;
+        for (String name : names) {
+            int outcomes = net.getVariable(name).getOutComes().length;
+            rows *= outcomes;
+        }
+        rows += 1;
+        this.table = new String[rows][columns];
+
+
+        int multi = 1;
+        for (int i = 0; i < names.size(); i++) {
+            this.table[0][i] = names.get(i);
+            Variable variable = net.getVariable(this.table[0][i]);
+            int loop = multi;
+            int row = 1;
+            while (row < rows) {
+                for (String outcome : variable.getOutComes()) {
+                    int index = 0;
+                    while (index < loop) {
+                        this.table[row][i] = outcome;
+                        row++;
+                        index++;
+                    }
                 }
             }
+            multi *= variable.getOutComes().length;
+
+        }
+        this.table[0][names.size()] = "Probability";
+
+        for (int p = 1; p < this.table.length; p++) {
+            List<String> newRow = new ArrayList<>();
+            for (int i = 0; i < this.table[0].length - 1; i++) {
+                String variableAndOutcome = this.table[0][i] + "=" + this.table[p][i];
+                newRow.add(variableAndOutcome);
+            }
+
+//            System.out.println("Row to find\n" + newRow);
+
+            for (int rowLeftIndex = 1; rowLeftIndex < left.table.length; rowLeftIndex++) {
+                List<String> leftRow = new ArrayList<>();
+                for (int i = 0; i < left.table[0].length - 1; i++) {
+                    String leftVariableAndOutcome = left.table[0][i] + "=" + left.table[rowLeftIndex][i];
+                    leftRow.add(leftVariableAndOutcome);
+                }
+
+                if (newRow.containsAll(leftRow)) {
+
+//                    System.out.println("LeftRow found\n" + leftRow);
+
+                    for (int rowRightIndex = 1; rowRightIndex < right.table.length; rowRightIndex++) {
+                        List<String> rightRow = new ArrayList<>();
+                        for (int i = 0; i < right.table[0].length - 1; i++) {
+                            String rightVariableAndOutcome = right.table[0][i] + "=" + right.table[rowRightIndex][i];
+                            rightRow.add(rightVariableAndOutcome);
+                        }
+
+                        if (newRow.containsAll(rightRow)) {
+//                            System.out.println("RightRow found\n" + rightRow);
+                            double leftValue = Double.parseDouble(left.table[rowLeftIndex][left.table[0].length - 1]);
+                            double rightValue = Double.parseDouble(right.table[rowRightIndex][right.table[0].length - 1]);
+                            double result = leftValue * rightValue;
+                            this.table[p][this.table[0].length - 1] = result + "";
+                            VariableElimination.addMultiply();
+                            break;
+                        }
+                    }
+                    break;
+                }
+            }
+
         }
 
-
-//        System.out.println(this);
     }
 
-    public Factor(Factor toSum) {
-        this.id = Factor.nums;
+    public Factor(Factor toSum, String hidden){
         Factor.nums++;
-        this.factorTable = new HashMap<>();
+        this.id = Factor.nums;
         this.names = new ArrayList<>();
-        HashSet<List<String>> toAvoid = new HashSet<>();
-        for (List<String> name : toSum.factorTable.keySet()) {
-            for (String s : name) {
-                String[] temp = s.split("=");
-                if (!toSum.names.contains(temp[0])) {
-                    this.names.add(temp[0]);
-                }
+        for (int i = 0; i < toSum.table[0].length - 1; i++) {
+            if (!hidden.equals(toSum.table[0][i])){
+                this.names.add(toSum.table[0][i]);
             }
         }
-        this.names = this.names.stream().distinct().collect(Collectors.toList());
-        for (List<String> row1 : toSum.factorTable.keySet()) {
-            List<String> subtract1 = new ArrayList<>(row1);
-            for (String s : row1) {
-                String[] temp = s.split("=");
-                if (toSum.names.contains(temp[0])) {
-                    subtract1.remove(s);
-                }
-            }
-            for (List<String> row2 : toSum.factorTable.keySet()) {
-                if (row1.equals(row2)) continue;
 
-                List<String> subtract2 = new ArrayList<>(row2);
-                for (String s : row2) {
-                    String[] temp = s.split("=");
-                    if (toSum.names.contains(temp[0])) {
-                        subtract2.remove(s);
+
+        Variable hiddenVariable = net.getVariable(hidden);
+        int rows = toSum.table.length / hiddenVariable.getOutComes().length;
+        int columns = toSum.table[0].length - 1;
+        this.table = new String[rows + 1][columns];
+
+        int multi = 1;
+
+        for (int i = 0; i < names.size(); i++) {
+            this.table[0][i] = names.get(i);
+            Variable variable = net.getVariable(this.table[0][i]);
+            int loop = multi;
+            int row = 1;
+            while (row < rows) {
+                for (String outcome : variable.getOutComes()) {
+                    int index = 0;
+                    while (index < loop) {
+                        this.table[row][i] = outcome;
+                        row++;
+                        index++;
                     }
                 }
-                List<String> both = new ArrayList<>(subtract1);
-                both.retainAll(subtract2);
-                if (both.size() == subtract1.size())
-                    if (!toAvoid.contains(both)) {
-                        toAvoid.add(both);
-                        double value = toSum.factorTable.get(row1) + toSum.factorTable.get(row2);
-                        VariableElimination.addAddition();
-                        this.factorTable.put(both, value);
-                    }
-
             }
+            multi *= variable.getOutComes().length;
+
         }
-//        System.out.println(this);
+        this.table[0][names.size()] = "Probability";
+
+        System.out.println();
+
+        for (int p = 1; p < this.table.length; p++) {
+            List<String> newRow = new ArrayList<>();
+            for (int i = 0; i < this.table[0].length - 1; i++) {
+                String variableAndOutcome = this.table[0][i] + "=" + this.table[p][i];
+                newRow.add(variableAndOutcome);
+            }
+
+//            System.out.println("Row to find\n" + newRow);
+
+            for (int rowLeftIndex = 1; rowLeftIndex < toSum.table.length; rowLeftIndex++) {
+                List<String> toSumRow1 = new ArrayList<>();
+                String compare = "";
+                for (int i = 0; i < toSum.table[0].length - 1; i++) {
+                    if (hidden.equals(toSum.table[0][i])){
+                        compare = toSum.table[0][i] + "=" + toSum.table[rowLeftIndex][i];
+                    } else {
+                        String leftVariableAndOutcome = toSum.table[0][i] + "=" + toSum.table[rowLeftIndex][i];
+                        toSumRow1.add(leftVariableAndOutcome);
+                    }
+
+                }
+
+                if (toSumRow1.containsAll(newRow)) {
+
+//                    System.out.println("LeftRow found\n" + toSumRow1);
+
+                    for (int rowRightIndex = 1; rowRightIndex < toSum.table.length; rowRightIndex++) {
+                        String withCompare = "";
+                        List<String> toSumRow2 = new ArrayList<>();
+                        for (int i = 0; i < toSum.table[0].length - 1; i++) {
+                            if (hidden.equals(toSum.table[0][i])){
+                                withCompare = toSum.table[0][i] + "=" + toSum.table[rowRightIndex][i];
+                            }else {
+                                String rightVariableAndOutcome = toSum.table[0][i] + "=" + toSum.table[rowRightIndex][i];
+                                toSumRow2.add(rightVariableAndOutcome);
+                            }
+
+                        }
+
+
+
+                        if (toSumRow2.containsAll(newRow) && !compare.equals(withCompare)) {
+//                            System.out.println("RightRow found\n" + toSumRow2);
+                            double leftValue = Double.parseDouble(toSum.table[rowLeftIndex][toSum.table[0].length - 1]);
+                            double rightValue = Double.parseDouble(toSum.table[rowRightIndex][toSum.table[0].length - 1]);
+//                            System.out.println("LEFT" + leftValue);
+//                            System.out.println("Right" + rightValue);
+                            double result = leftValue + rightValue;
+//                            System.out.println("RESULT" + result);
+                            this.table[p][this.table[0].length - 1] = result + "";
+                            VariableElimination.addAddition();
+                            break;
+                        }
+                    }
+                    break;
+                }
+            }
+
+        }
+        System.out.println();
     }
 
+    public static double Normalize(Factor toNormal){
+        double sum = 0;
+        for (int i = 1; i < toNormal.table.length; i++) {
+            double add =
+                    Double.parseDouble(
+                            toNormal.table[i][toNormal.table[i].length - 1]
+                    );
+            sum += add;
+            VariableElimination.addAddition();
+        }
+        return sum;
+    }
 
+    public static double getQueryValue(Factor factorQ, String query){
+        double value = 0;
+        for (int i = 0; i < factorQ.table.length - 1; i++) {
+
+            String compare = factorQ.table[0][0] + "=" + factorQ.table[i][0];
+            if (query.equals(compare)){
+                value = Double.parseDouble(factorQ.table[i][factorQ.table[i].length - 1]);
+            }
+        }
+        return value;
+    }
+
+    public int getTableSize() {
+        return table.length * table[0].length;
+    }
     @Override
     public String toString() {
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append(names.toString()).append("\n");
-        for (List<String> key : factorTable.keySet()) {
-            String temp = String.format("%.10f", factorTable.get(key));
-            stringBuilder.append(key.toString()).append(" => ").append(temp).append("\n");
+        for (int i = 1; i < this.table.length; i++) {
+            for (int j = 0; j < this.table[i].length - 1; j++) {
+                stringBuilder.append("[").append(this.table[i][j]).append("],");
+            }
+            stringBuilder.append(" => ");
+            double Dprint = Double.parseDouble(this.table[i][this.table[i].length - 1]);
+            String print = String.format("%.5f",Dprint);
+            stringBuilder.append(print);
+            stringBuilder.append("\n");
         }
-        stringBuilder.append("\n");
-        String toPrint = stringBuilder.toString();
-        return toPrint;
+        return stringBuilder.toString();
     }
 }

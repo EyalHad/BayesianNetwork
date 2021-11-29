@@ -116,26 +116,26 @@ public class InputHandler {
                                 variableElimination.addToOrder(hidden);
                             } else {
                                 List<Integer> integerList = new ArrayList<>();
-                                for (int rm: variableElimination.getFactorMap().keySet()) {
+                                for (int rm : variableElimination.getFactorMap().keySet()) {
                                     Factor factor = variableElimination.getFactorMap().get(rm);
-                                    if (factor.names.contains(hidden)){
+                                    if (factor.names.contains(hidden)) {
                                         integerList.add(rm);
                                     }
                                 }
-                                for (int rm:
-                                     integerList) {
+                                for (int rm :
+                                        integerList) {
                                     variableElimination.getFactorMap().remove(rm);
                                 }
                             }
                         } else {
                             List<Integer> integerList = new ArrayList<>();
-                            for (int rm: variableElimination.getFactorMap().keySet()) {
+                            for (int rm : variableElimination.getFactorMap().keySet()) {
                                 Factor factor = variableElimination.getFactorMap().get(rm);
-                                if (factor.names.contains(hidden)){
+                                if (factor.names.contains(hidden)) {
                                     integerList.add(rm);
                                 }
                             }
-                            for (int rm:
+                            for (int rm :
                                     integerList) {
                                 variableElimination.getFactorMap().remove(rm);
                             }
@@ -162,7 +162,7 @@ public class InputHandler {
     public static class XMLParser {
 
         public static Network net;
-        private static boolean print = true;
+        private static boolean print = false;
 
         public static void readXML(String FILENAME) {
 
@@ -188,7 +188,7 @@ public class InputHandler {
                     Element element = (Element) var;
                     NodeList list = element.getChildNodes();
 
-                    String varName = "";
+                    String variableName = "";
                     StringBuilder outcomesBuilder = new StringBuilder();
                     for (int j = 0; j < list.getLength(); j++) {
                         Node tmp = list.item(j);
@@ -196,7 +196,7 @@ public class InputHandler {
                         try {
                             Element inner = (Element) tmp;
                             if (inner.getTagName().equals("NAME")) {
-                                varName = tmp.getTextContent();
+                                variableName = tmp.getTextContent();
 
                             } else if (inner.getTagName().equals("OUTCOME")) {
                                 outcomesBuilder.append(tmp.getTextContent()).append(" ");
@@ -204,10 +204,12 @@ public class InputHandler {
                             }
                         } catch (Exception ignored) { /* EMPTY */ }
                     }
-                    Variable v = new Variable(varName, outcomesBuilder.toString().split(" "));
+                    Variable v = new Variable(variableName, outcomesBuilder.toString().split(" "));
+                    // Adding the Variable to the Bayes Network
                     net.addVariable(v);
                 }
 
+                // Here is a Variable and its Dependencies - For each DEFINITION in the NodeList
                 NodeList DEFINITION = doc.getElementsByTagName("DEFINITION");
 
                 for (int i = 0; i < DEFINITION.getLength(); i++) {
@@ -223,20 +225,25 @@ public class InputHandler {
 
                         try {
                             Element inner = (Element) tmp;
+                            // FOR marks the current Variable
                             if (inner.getTagName().equals("FOR")) {
 
                                 varName = inner.getTextContent();
-
+                                // GIVEN marks the Variable parents
                             } else if (inner.getTagName().equals("GIVEN")) {
 
                                 String given = inner.getTextContent();
                                 givens.append(given).append(" ");
 
                                 Variable variable = net.getVariable(given);
+                                /*  Retrieving the Parent from the Bayes Network
+                                 *  Creating an Edge between parent and child
+                                 */
                                 net.addEdge(varName, variable);
                                 net.getVariable(varName).addParent(variable);
                                 net.getVariable(variable.getName()).addChild(net.getVariable(varName));
 
+                                // TABLE is the Probability List
                             } else if (inner.getTagName().equals("TABLE")) {
 
                                 String table = inner.getTextContent();
@@ -246,6 +253,7 @@ public class InputHandler {
                                 Variable netVariable = net.getVariable(varName);
                                 int outcomes = netVariable.getOutComes().length;
 
+                                // This condition means there are No Parent to this Variable
                                 if (parents[0].equals("")) {
 
                                     String[][] tableNoParents = new String[outcomes + 1][2];
@@ -264,7 +272,6 @@ public class InputHandler {
                                         netVariable.getCpt().addRow(set.toString(), Double.parseDouble(probabilitiesAsStrings[l]));
                                         netVariable.getCpt().addDependency(vars, Double.parseDouble(probabilitiesAsStrings[l]));
 
-
                                     }
                                     netVariable.getCpt().addMatrix(tableNoParents);
                                     if (print) {
@@ -273,7 +280,7 @@ public class InputHandler {
                                         }
                                         System.out.println("--------------------------------------");
                                     }
-
+                                // The Variable has parents
                                 } else {
 
                                     int probabilities = probabilitiesAsStrings.length;

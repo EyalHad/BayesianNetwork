@@ -129,49 +129,42 @@ public class VariableElimination {
             while (pq.size() != 1 && !pq.isEmpty()) {
                 System.out.println("-------------------PICK-------------------");
                 Factor left = pq.poll();
-                System.out.println(left.id+"\n"+left);
+                assert left != null;
+                System.out.println(left.id + "\n" + left);
                 System.out.println("-------------------PICK-------------------");
                 Factor right = pq.poll();
-                System.out.println(right.id+"\n"+right);
-                Factor combined = new Factor(left,right);
+                assert right != null;
+                System.out.println(right.id + "\n" + right);
+                Factor combined = new Factor(left, right);
                 System.out.println("-------------------After JOIN-------------------");
-                System.out.println(combined.id+"\n"+combined);
+                System.out.println(combined.id + "\n" + combined);
                 pq.add(combined);
             }
-            if (!pq.isEmpty()) {
-                Factor afterSum = new Factor(pq.poll());
-                System.out.println("-------------------After SUM-------------------");
-                System.out.println(afterSum.id+"\n"+afterSum);
-                this.factorMap.put(afterSum.id, afterSum);
-            }
+            Factor afterSum = new Factor(Objects.requireNonNull(pq.poll()), hidden);
+            System.out.println("-------------------After SUM-------------------");
+            System.out.println(afterSum.id + "\n" + afterSum);
+            this.factorMap.put(afterSum.id, afterSum);
+
 
         }
         Queue<Factor> pq = new PriorityQueue<>(new FactorComparator());
         String q = query.split("=")[0];
-        if (factorMap.size() > 1) {
-            for (int id :
-                    factorMap.keySet()) {
-                Factor te = factorMap.get(id);
-                if (te.names.contains(q))
-                    pq.add(factorMap.get(id));
-            }
+
+        for (int id : factorMap.keySet()) {
+            Factor te = factorMap.get(id);
+            if (te.names.contains(q))
+                pq.add(factorMap.get(id));
         }
+
         while (pq.size() != 1) {
             Factor combined = new Factor(pq.poll(), pq.poll());
             pq.add(combined);
         }
-        double bottom = 0;
         Factor last = pq.poll();
-        for (double val :
-                last.factorTable.values()) {
-            addAddition();
-            bottom += val;
-        }
+        double denominator = Factor.Normalize(last);
+        double numerator = Factor.getQueryValue(last, query);
         addition--;
-        List<String> que = new ArrayList<>();
-        que.add(query);
-        double up = last.factorTable.get(que);
-        answer = up / bottom;
+        answer = numerator / denominator ;
 
 
     }

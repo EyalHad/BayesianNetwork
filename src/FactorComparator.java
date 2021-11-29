@@ -6,8 +6,8 @@ public class FactorComparator implements Comparator<Factor> {
 
     @Override
     public int compare(Factor a, Factor b) {
-        if (a.factorTable.size() > b.factorTable.size()) return 1;
-        else if (a.factorTable.size() < b.factorTable.size()) return -1;
+        if (a.getTableSize() > b.getTableSize()) return 1;
+        else if (a.getTableSize() < b.getTableSize()) return -1;
         return Integer.compare(stringASCII(a.names),stringASCII(b.names));
     }
 
