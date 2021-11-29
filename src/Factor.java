@@ -10,6 +10,7 @@ public class Factor {
 
 
     private static Network net;
+
     public static void setNet(Network network) {
         net = network;
     }
@@ -33,32 +34,75 @@ public class Factor {
         int minusRows = 0;
         int minusColumns = 0;
         Set<String> evidenceSet = new HashSet<>();
+        Set<String> evidenceAndOutcomeSet = new HashSet<>();
+        for (String evi : evidences) {
+            String[] split = evi.split("=");
+            String var = split[0];
+            evidenceAndOutcomeSet.add(evi);
+            evidenceSet.add(var);
+        }
+//        for (int i = 0; i < temporary[0].length - 1; i++) {
+//
+//            String varString = temporary[0][i];
+//            names.add(varString);
+//
+//            for (String evi : evidences) {
+//
+//                String[] split = evi.split("=");
+//                String var = split[0];
+//                evidenceSet.add(var);
+//                String outcome = split[1];
+//
+//                if (varString.equals(var)) {
+//                    minusColumns++;
+//                    /* temporary[0][i] = "-"; */
+//                    for (int j = 1; j < temporary.length; j++) {
+//                        if (!temporary[j][i].equals(outcome)) {
+//                            minusRows++;
+//                            for (int k = 0; k < temporary[0].length; k++) {
+//                                temporary[j][k] = "-";
+//                            }
+//                        }
+//                    }
+//                }
+//            }
+//        }
+        for (int i = 0; i < temporary[0].length - 1; i++) {
+            String varString = temporary[0][i];
+            for (String fromSet : evidenceSet) {
+                if (varString.equals(fromSet.split("=")[0])) {
+                    minusColumns++;
+                }
+            }
+        }
         for (int i = 0; i < temporary[0].length - 1; i++) {
 
             String varString = temporary[0][i];
             names.add(varString);
-
-            for (String evi : evidences) {
-
-                String[] split = evi.split("=");
-                String var = split[0];
-                evidenceSet.add(var);
-                String outcome = split[1];
-
-                if (varString.equals(var)) {
-                    minusColumns++;
-                    /* temporary[0][i] = "-"; */
-                    for (int j = 1; j < temporary.length; j++) {
-                        if (!temporary[j][i].equals(outcome)) {
-                            minusRows++;
-                            for (int k = 0; k < temporary[0].length; k++) {
-                                temporary[j][k] = "-";
-                            }
+            for (int j = 1; j < temporary.length; j++) {
+                String variableAndOutcome = varString + "=" + temporary[j][i];
+                if (evidenceSet.contains(varString)) {
+                    if (!evidenceAndOutcomeSet.contains(variableAndOutcome)) {
+                        for (int k = 0; k < temporary[0].length; k++) {
+                            temporary[j][k] = "-";
                         }
+
                     }
                 }
             }
+
         }
+        for (int i = 0; i < temporary.length; i++) {
+            boolean flag = false;
+            for (int j = 0; j < temporary[0].length; j++) {
+                if (temporary[i][j].equals("-")){
+                    flag = true;
+                    break;
+                }
+            }
+            if (flag) { minusRows++; }
+        }
+
         names.removeAll(evidenceSet);
         if (minusColumns == 0 && minusRows == 0) {
             this.table = temporary;
@@ -79,8 +123,8 @@ public class Factor {
                 }
             }
         }
-
-        System.out.println(this);
+//        System.out.println();
+//        System.out.println(this);
 
     }
 
@@ -189,12 +233,12 @@ public class Factor {
 
     }
 
-    public Factor(Factor toSum, String hidden){
+    public Factor(Factor toSum, String hidden) {
         Factor.nums++;
         this.id = Factor.nums;
         this.names = new ArrayList<>();
         for (int i = 0; i < toSum.table[0].length - 1; i++) {
-            if (!hidden.equals(toSum.table[0][i])){
+            if (!hidden.equals(toSum.table[0][i])) {
                 this.names.add(toSum.table[0][i]);
             }
         }
@@ -242,7 +286,7 @@ public class Factor {
                 List<String> toSumRow1 = new ArrayList<>();
                 String compare = "";
                 for (int i = 0; i < toSum.table[0].length - 1; i++) {
-                    if (hidden.equals(toSum.table[0][i])){
+                    if (hidden.equals(toSum.table[0][i])) {
                         compare = toSum.table[0][i] + "=" + toSum.table[rowLeftIndex][i];
                     } else {
                         String leftVariableAndOutcome = toSum.table[0][i] + "=" + toSum.table[rowLeftIndex][i];
@@ -259,15 +303,14 @@ public class Factor {
                         String withCompare = "";
                         List<String> toSumRow2 = new ArrayList<>();
                         for (int i = 0; i < toSum.table[0].length - 1; i++) {
-                            if (hidden.equals(toSum.table[0][i])){
+                            if (hidden.equals(toSum.table[0][i])) {
                                 withCompare = toSum.table[0][i] + "=" + toSum.table[rowRightIndex][i];
-                            }else {
+                            } else {
                                 String rightVariableAndOutcome = toSum.table[0][i] + "=" + toSum.table[rowRightIndex][i];
                                 toSumRow2.add(rightVariableAndOutcome);
                             }
 
                         }
-
 
 
                         if (toSumRow2.containsAll(newRow) && !compare.equals(withCompare)) {
@@ -291,7 +334,7 @@ public class Factor {
         System.out.println();
     }
 
-    public static double Normalize(Factor toNormal){
+    public static double Normalize(Factor toNormal) {
         double sum = 0;
         for (int i = 1; i < toNormal.table.length; i++) {
             double add =
@@ -304,12 +347,12 @@ public class Factor {
         return sum;
     }
 
-    public static double getQueryValue(Factor factorQ, String query){
+    public static double getQueryValue(Factor factorQ, String query) {
         double value = 0;
-        for (int i = 0; i < factorQ.table.length - 1; i++) {
+        for (int i = 1; i < factorQ.table.length; i++) {
 
             String compare = factorQ.table[0][0] + "=" + factorQ.table[i][0];
-            if (query.equals(compare)){
+            if (query.equals(compare)) {
                 value = Double.parseDouble(factorQ.table[i][factorQ.table[i].length - 1]);
             }
         }
@@ -319,6 +362,7 @@ public class Factor {
     public int getTableSize() {
         return table.length * table[0].length;
     }
+
     @Override
     public String toString() {
         StringBuilder stringBuilder = new StringBuilder();
@@ -329,7 +373,7 @@ public class Factor {
             }
             stringBuilder.append(" => ");
             double Dprint = Double.parseDouble(this.table[i][this.table[i].length - 1]);
-            String print = String.format("%.5f",Dprint);
+            String print = String.format("%.5f", Dprint);
             stringBuilder.append(print);
             stringBuilder.append("\n");
         }
