@@ -5,7 +5,7 @@ import java.util.ArrayList;
 public class Output {
 
     private static ArrayList<String> lines;
-    private static final String FILENAME = "filename.txt";
+    private static final String FILENAME = "output.txt";
     public static void setLines() {
         lines = new ArrayList<>();
     }
